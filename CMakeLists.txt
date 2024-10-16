@@ -16,6 +16,8 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Quick)
 
 set(PROJECT_HEADERS
     d_file_info.h
+    d_operation_queue.h
+    d_operation_with_timeout.h
     d_samba_client.h
     d_smb_manager.h
 
@@ -23,6 +25,8 @@ set(PROJECT_HEADERS
 )
 set(PROJECT_SOURCES
     d_file_info.cpp
+    d_operation_queue.cpp
+    d_operation_with_timeout.cpp
     d_samba_client.cpp
     d_smb_manager.cpp
 

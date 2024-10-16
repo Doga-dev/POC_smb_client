@@ -33,7 +33,7 @@
 class DSambaClient : public ISmbClient {
     Q_OBJECT
 
-    // Q_PROPERTY(QStringList filesList READ filesList NOTIFY directoryReady FINAL)
+    Q_PROPERTY(bool busy READ isBusy WRITE setBusy NOTIFY busyChanged FINAL)
 public:
     explicit        DSambaClient                (QObject * parent = nullptr);
 
@@ -45,6 +45,9 @@ public:
                                                  const QString & password,
                                                  const QString & sharedFolder) Q_DECL_OVERRIDE;
 
+    bool isBusy() const;
+    void setBusy(bool busy);
+
 public slots:
     void            listDirectory               (int contextId, const QString & relativePath);
     void            readFile                    (int contextId, const QString & relativePath);
@@ -55,6 +58,7 @@ public slots:
     void            onDirectoryListed           (int contextId, const QString & fullPath, const QList<pDFileInfo> & fileList) Q_DECL_OVERRIDE;
     void            onFileRead                  (int contextId, const QString & fullPath, const QByteArray & content) Q_DECL_OVERRIDE;
     void            onFileWriten                (int contextId, const QString & fullPath, int contentSize) Q_DECL_OVERRIDE;
+    void            onBackupLocalDirProgress    (int contextId, const QString & fullPath, int progressPercent) Q_DECL_OVERRIDE;
     void            onBackupLocalDirDone        (int contextId, const QString & fullPath, int nbFilesCopied) Q_DECL_OVERRIDE;
     void            onError                     (int contextId, const QString & error) Q_DECL_OVERRIDE;
 
@@ -63,13 +67,17 @@ signals:
     void            directoryReady              (const QString & fullPath, const QString & fileList);
     void            fileContentReady            (const QString & fullPath, const QString & fileContent);
     void            fileWritenDone              (const QString & fullPath, const QString & message);
+    void            backupLocalDirProgress      (const QString & fullPath, const QString & message);
     void            backupLocalDirDone          (const QString & fullPath, const QString & message);
     void            errorOccured                (const QString & message);
+
+    void busyChanged();
 
 private:
     QString         getDuration                 () const;
 
     QDateTime   m_cmdStartTime;
+    bool        m_busy;
 };
 
 #endif // D_SAMBA_CLIENT_H

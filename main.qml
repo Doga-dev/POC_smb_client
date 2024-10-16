@@ -27,6 +27,7 @@ ApplicationWindow {
             // Ligne pour ajouter et supprimer des clients
             Row {
                 spacing: 10
+
                 Button {
                     text: "Ajouter Client"
                     onClicked: clientPopup.open()
@@ -39,8 +40,9 @@ ApplicationWindow {
                         clientModel.remove(clientComboBox.currentIndex);
                     }
                 }
+
                 Item {
-                    width: 20
+                    width: 40
                     height: parent.height
                 }
 
@@ -49,6 +51,7 @@ ApplicationWindow {
                     enabled: clientComboBox.currentIndex >= 0
                     text: "/media/internal_storage/reports"
                 }
+
                 Button {
                     text: "Backup"
                     enabled: clientComboBox.currentIndex >= 0
@@ -59,6 +62,17 @@ ApplicationWindow {
                         console.log("Backup folder '" + sourcePath + "' in contextId " + contextId + ", subfoldder: " + destPath);
                         sambaClient.backupLocalFolder(contextId, destPath, sourcePath);
                     }
+                }
+
+                Item {
+                    width: 40
+                    height: parent.height
+                }
+
+                BusyIndicator {
+                    height: parent.height
+                    width: height
+                    running: sambaClient.busy
                 }
             }
 
@@ -177,6 +191,9 @@ ApplicationWindow {
         }
         onFileWritenDone    : function (fullPath, message) {
             outputArea.text = "Writen file '" + fullPath + "' size =\n" + message;
+        }
+        onBackupLocalDirProgress: function (fullPath, message) {
+            outputArea.text = "Backup local folder to directory '" + fullPath + "', progress =\n" + message;
         }
         onBackupLocalDirDone: function (fullPath, message) {
             outputArea.text = "Backup local folder to directory '" + fullPath + "', number of files copied =\n" + message;

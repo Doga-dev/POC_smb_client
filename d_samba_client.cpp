@@ -49,6 +49,7 @@ void DSambaClient::listDirectory(int contextId, const QString & relativePath)
 {
     m_cmdStartTime = QDateTime::currentDateTime();
     qDebug() << Q_FUNC_INFO << ": contextId =" << contextId << ", relativePath =" << relativePath;
+    setBusy(true);
     emit sigGetDirectoryFilesList(contextId, relativePath);
     emit commandSent();
 }
@@ -57,6 +58,7 @@ void DSambaClient::readFile(int contextId, const QString & relativePath)
 {
     m_cmdStartTime = QDateTime::currentDateTime();
     qDebug() << Q_FUNC_INFO << ": contextId =" << contextId << ", relativePath =" << relativePath;
+    setBusy(true);
     emit sigReadFile(contextId, relativePath);
     emit commandSent();
 }
@@ -65,6 +67,7 @@ void DSambaClient::writeFile(int contextId, const QString & relativePath, const 
 {
     m_cmdStartTime = QDateTime::currentDateTime();
     qDebug() << Q_FUNC_INFO << ": contextId =" << contextId << ", relativePath =" << relativePath << ", content =" << content;
+    setBusy(true);
     emit sigWriteFile(contextId, relativePath, content);
     emit commandSent();
 }
@@ -75,12 +78,14 @@ void DSambaClient::backupLocalFolder(int             contextId,
 {
     m_cmdStartTime = QDateTime::currentDateTime();
     qDebug() << Q_FUNC_INFO << ": contextId =" << contextId << ", relativeDestPath =" << relativeDestPath << ", sourcePath =" << sourcePath;
+    setBusy(true);
     emit sigBackupLocalDirectory(contextId, relativeDestPath, sourcePath);
     emit commandSent();
 }
 
 void DSambaClient::onDirectoryListed(int contextId, const QString & fullPath, const QList<pDFileInfo> & fileList)
 {
+    setBusy(false);
     QString formattedList;
     for (auto iter = fileList.begin(); iter != fileList.end(); ++iter) {
         pDFileInfo fileInfo = *iter;
@@ -94,21 +99,32 @@ void DSambaClient::onDirectoryListed(int contextId, const QString & fullPath, co
 
 void DSambaClient::onFileRead(int contextId, const QString & fullPath, const QByteArray & content)
 {
+    setBusy(false);
     emit fileContentReady(fullPath, QString(content) + getDuration());
 }
 
 void DSambaClient::onFileWriten(int contextId, const QString & fullPath, int contentSize)
 {
+    setBusy(false);
     emit fileWritenDone(fullPath, QString("%1 bytes").arg(contentSize) + getDuration());
+}
+
+void DSambaClient::onBackupLocalDirProgress(int             contextId,
+                                            const QString & fullPath,
+                                            int             progressPercent)
+{
+    emit backupLocalDirProgress(fullPath, QString("%1 %").arg(progressPercent) + getDuration());
 }
 
 void DSambaClient::onBackupLocalDirDone(int contextId, const QString & fullPath, int nbFilesCopied)
 {
+    setBusy(false);
     emit backupLocalDirDone(fullPath, QString("%1 files").arg(nbFilesCopied) + getDuration());
 }
 
 void DSambaClient::onError(int contextId, const QString & error)
 {
+    setBusy(false);
     QString message = "Erreur pour le contexte " + QString::number(contextId) + ": " + error;
     qCritical() << message;
     emit errorOccured(message + getDuration());
@@ -118,4 +134,17 @@ QString DSambaClient::getDuration() const
 {
     QString str("\n\n  duration = %1 ms");
     return str.arg(m_cmdStartTime.msecsTo(QDateTime::currentDateTime()));
+}
+
+bool DSambaClient::isBusy() const
+{
+    return m_busy;
+}
+
+void DSambaClient::setBusy(bool busy)
+{
+    if (m_busy == busy)
+        return;
+    m_busy = busy;
+    emit busyChanged();
 }

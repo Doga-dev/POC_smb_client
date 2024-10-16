@@ -55,6 +55,7 @@ public slots:
     virtual void    onDirectoryListed       (int contextId, const QString & fullPath, const QList<pDFileInfo> & fileList) = 0;
     virtual void    onFileRead              (int contextId, const QString & fullPath, const QByteArray & content) = 0;
     virtual void    onFileWriten            (int contextId, const QString & fullPath, int contentSize) = 0;
+    virtual void    onBackupLocalDirProgress(int contextId, const QString & fullPath, int progressPercent) = 0;
     virtual void    onBackupLocalDirDone    (int contextId, const QString & fullPath, int nbFilesCopied) = 0;
     virtual void    onError                 (int contextId, const QString & error) = 0;
 

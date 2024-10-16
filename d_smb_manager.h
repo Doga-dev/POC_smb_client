@@ -36,6 +36,7 @@
 #include <libsmbclient.h>
 
 #include "d_file_info.h"
+#include "d_operation_queue.h"
 #include "i_smb_client.h"
 
 struct SmbAuthInfo {
@@ -85,6 +86,7 @@ signals:
     void                    directoryListed         (int contextId, const QString & fullPath, const QList<pDFileInfo> & fileList);
     void                    fileRead                (int contextId, const QString & fullPath, const QByteArray & content);
     void                    fileWriten              (int contextId, const QString & fullPath, int contentSize);
+    void                    backupLocalDirProgress  (int contextId, const QString & fullPath, int progressPercent);
     void                    backupLocalDirDone      (int contextId, const QString & fullPath, int nbFilesCopied);
     void                    errorOccurred           (int contextId, const QString & error);
 
@@ -94,6 +96,10 @@ private:
 
     pDFileInfo              getFileInfo             (bool isFolder, const struct libsmb_file_info * fileInfo);
     QString                 copyFileToSmb           (int contextId, const QString &localFilePath, const QString &destSmbPath);
+    bool                    checkConnection         (int contextId);
+    bool                    attemptReconnection     (int contextId, int maxAttempts, int delayMs);
+    void                    resetError              ();
+    void                    emitError               (int contextId, const QString & message);
 
     // Fonction de rappel pour l'authentification
     static void             authCallback            (SMBCCTX *    context,
@@ -111,6 +117,12 @@ private:
     QMap<int, SMBCCTX *>        m_contexts;        // Contexte SMB par identifiant
     QMutex                      m_mutex;           // Mutex pour protéger l'accès aux contextes
     int                         m_nextContextId;   // Identifiant de contexte suivant
+    DOperationQueue             m_operationQueue;
+    bool                        m_onError;
+
+    static const int            c_operationTimeout = 3000;
+    static const int            c_connectAttemptsNb = 3;
+    static const int            c_connectAttemptDelay = 1000;   // ms
 };
 
 #endif // D_SMB_MANAGER_H
